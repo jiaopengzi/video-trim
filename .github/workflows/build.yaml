@@ -44,6 +44,11 @@ jobs:
         with:
           go-version: ${{ env.GOV }}
 
+      - name: install dependencies
+        run: |
+          go mod download
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
       - name: Build all (make all)
         run: |
           make all
