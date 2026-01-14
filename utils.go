@@ -278,11 +278,11 @@ func processSingleFile(hdr *multipart.FileHeader, idx int, headSec int, tailSec 
 	outFile.Close()
 
 	// 生成输出文件名并确保不会覆盖已有文件
-	outName := fmt.Sprintf("%s-head%s", nameOnly, ext)
+	outName := fmt.Sprintf("%s-cut%s", nameOnly, ext)
 	outputPath := filepath.Join(outputDir, outName)
 
 	if _, err := os.Stat(outputPath); err == nil {
-		outName = fmt.Sprintf("%s-head-%d%s", nameOnly, time.Now().Unix(), ext)
+		outName = fmt.Sprintf("%s-cut-%d%s", nameOnly, time.Now().Unix(), ext)
 		outputPath = filepath.Join(outputDir, outName)
 	}
 

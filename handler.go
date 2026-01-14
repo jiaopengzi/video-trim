@@ -106,6 +106,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// 逐个处理文件并生成响应
 	processed := processUploadedFiles(files, headSec, tailSec)
+
 	// 生成并返回下载页面
 	generateResponse(w, processed, r)
 }
