@@ -29,6 +29,10 @@ windows 安装 ffmpeg 在 powershell 中运行 `scoop install ffmpeg`
 
 在[releases](https://github.com/jiaopengzi/video-trim/releases)下载对应的版本。
 
-将文件解压后直接双击 `video-trim-windows.exe` 即可。
+将文件解压后直接双击 `video-trim-windows.exe` 即可，其他系统类似。
+
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/db8fb8a2-0ed3-4a26-aff9-cf25bef2ba81" />
 
 然后根据提示访问对应的链接即可快乐裁剪视频了。
+
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/d3ed9d4b-ab7d-4016-87fd-83230ede239c" />

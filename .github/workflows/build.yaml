@@ -1,5 +1,8 @@
-# FilePath    : video-trim/.github/workflows/build.yaml
-# Auto-generated CI workflow
+# FilePath    : video-trim\.github\workflows\build.yaml
+# Author      : jiaopengzi
+# Blog        : https://jiaopengzi.com
+# Copyright   : Copyright (c) 2026 by jiaopengzi, All Rights Reserved.
+# Description : GitHub Actions 工作流文件，用于构建和发布 Video Trim 项目。
 
 name: Build Video Trim
 
