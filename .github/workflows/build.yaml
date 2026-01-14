@@ -69,13 +69,13 @@ jobs:
           fi
           SAFE_TAG=$(echo "$TAG" | tr '/' '-' | tr ' ' '-')
           if [ -d ./bin/windows ]; then
-            zip -r "dist/${SAFE_TAG}-windows.zip" ./bin/windows || true
+            (cd bin/windows && zip -r "../../dist/${SAFE_TAG}-windows.zip" .) || true
           fi
           if [ -d ./bin/linux ]; then
-            zip -r "dist/${SAFE_TAG}-linux.zip" ./bin/linux || true
+            (cd bin/linux && zip -r "../../dist/${SAFE_TAG}-linux.zip" .) || true
           fi
           if [ -d ./bin/macos ]; then
-            zip -r "dist/${SAFE_TAG}-macos.zip" ./bin/macos || true
+            (cd bin/macos && zip -r "../../dist/${SAFE_TAG}-macos.zip" .) || true
           fi
 
       - name: Create release and upload assets
