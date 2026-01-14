@@ -46,7 +46,7 @@ jobs:
 
       - name: install dependencies
         run: |
-          go mod download
+          go mod tidy
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
       - name: Build all (make all)
@@ -56,15 +56,20 @@ jobs:
       - name: Package artifacts
         run: |
           mkdir -p dist
-          TAG=${GITHUB_REF#refs/tags/}
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+          else
+            TAG=${GITHUB_REF##*/}
+          fi
+          SAFE_TAG=$(echo "$TAG" | tr '/' '-' | tr ' ' '-')
           if [ -d ./bin/windows ]; then
-            zip -r "dist/${TAG}-windows.zip" ./bin/windows || true
+            zip -r "dist/${SAFE_TAG}-windows.zip" ./bin/windows || true
           fi
           if [ -d ./bin/linux ]; then
-            zip -r "dist/${TAG}-linux.zip" ./bin/linux || true
+            zip -r "dist/${SAFE_TAG}-linux.zip" ./bin/linux || true
           fi
           if [ -d ./bin/macos ]; then
-            zip -r "dist/${TAG}-macos.zip" ./bin/macos || true
+            zip -r "dist/${SAFE_TAG}-macos.zip" ./bin/macos || true
           fi
 
       - name: Create release and upload assets
