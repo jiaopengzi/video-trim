@@ -1,0 +1,70 @@
+# FilePath    : video-trim/.github/workflows/build.yaml
+# Auto-generated CI workflow
+
+name: Build Video Trim
+
+on:
+  push:
+    # 仅当 tag 以小写 v 开头时触发
+    tags:
+      - "v*"
+  # 手动触发
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # 限制并发构建，防止同时构建多个
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare system
+        run: |
+          sudo apt update
+          sudo apt install -y curl git make zip unzip ca-certificates procps iproute2
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Read Go version from go.mod
+        id: read_go
+        run: |
+          GOV=$(grep '^go ' go.mod | awk '{print $2}' || true)
+          if [ -z "$GOV" ]; then
+            echo "No go version found in go.mod; defaulting to 1.25.5"
+            GOV=1.25.5
+          fi
+          echo "GOV=$GOV" >> $GITHUB_ENV
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GOV }}
+
+      - name: Build all (make all)
+        run: |
+          make all
+
+      - name: Package artifacts
+        run: |
+          mkdir -p dist
+          TAG=${GITHUB_REF#refs/tags/}
+          if [ -d ./bin/windows ]; then
+            zip -r "dist/${TAG}-windows.zip" ./bin/windows || true
+          fi
+          if [ -d ./bin/linux ]; then
+            zip -r "dist/${TAG}-linux.zip" ./bin/linux || true
+          fi
+          if [ -d ./bin/macos ]; then
+            zip -r "dist/${TAG}-macos.zip" ./bin/macos || true
+          fi
+
+      - name: Create release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
