@@ -22,7 +22,7 @@ var langZH = map[string]string{
 	KeyFileTooLargeSuffix:    "\" 超过单文件允许大小 ",
 	KeyFileTooLargeEnd:       ", 请减少文件大小后重试。",
 	KeyHeadLabel:             "掐头 N 秒(可修改)",
-	KeyTailLabel:             "掐尾 N 秒(可修改, 默认 0)",
+	KeyTailLabel:             "去尾 N 秒(可修改, 默认 0)",
 	KeyHint:                  "处理完成后会自动跳转到下载页面；确保浏览器和当前服务端在同一局域网。",
 	KeyProcessedTitle:        "处理完成, 点击下载: ",
 	KeyDownloadAll:           "下载全部",
@@ -36,4 +36,6 @@ var langZH = map[string]string{
 	KeyCannotReadFile:        "无法读取文件 %s",
 	KeyFileEmptyOrUnreadable: "文件 %s 为空或无法读取",
 	KeyNotSupportedVideo:     "文件 %s 不是受支持的视频格式(魔法数字校验失败)",
+	KeyUploadError:           "上传错误",
+	KeyUploadFailed:          "上传失败：",
 }

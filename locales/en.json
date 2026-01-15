@@ -25,5 +25,7 @@
   "TailLabel": "Tail trim seconds (editable, default 0)",
   "Title": "Video Trimmer",
   "UploadButton": "Upload \u0026 Process",
+  "UploadError": "Upload error",
+  "UploadFailed": "Upload failed: ",
   "UploadingText": "Uploading and processing..."
 }

@@ -37,4 +37,6 @@ const (
 	KeyCannotReadFile        = "CannotReadFile"
 	KeyFileEmptyOrUnreadable = "FileEmptyOrUnreadable"
 	KeyNotSupportedVideo     = "NotSupportedVideo"
+	KeyUploadError           = "UploadError"
+	KeyUploadFailed          = "UploadFailed"
 )

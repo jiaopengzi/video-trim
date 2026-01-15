@@ -231,6 +231,8 @@
             UploadingText: '{{index .I18n "UploadingText"}}',
             UploadButton: '{{index .I18n "UploadButton"}}',
             Hint: '{{index .I18n "Hint"}}',
+            UploadError: '{{index .I18n "UploadError"}}',
+            UploadFailed: '{{index .I18n "UploadFailed"}}',
             Remove: '{{index .I18n "Remove"}}'
         };
 
@@ -255,7 +257,7 @@
                     var top = document.createElement('div'); top.className = 'file-top';
                     var n = document.createElement('div'); n.className = 'file-name'; n.textContent = f.name;
                     var s = document.createElement('div'); s.className = 'file-size'; s.textContent = (f.size ? Math.round(f.size / 1024) + ' KB' : '');
-                    var rem = document.createElement('button'); rem.className = 'file-remove-btn'; rem.textContent = I18N.Remove || '移除';
+                    var rem = document.createElement('button'); rem.className = 'file-remove-btn'; rem.textContent = I18N.Remove;
                     rem.addEventListener('click', function (e) {
                         e.preventDefault();
                         selectedFiles.splice(idx, 1);
@@ -348,7 +350,7 @@
                             document.write(xhr.responseText);
                             document.close();
                         } else {
-                            var resp = xhr.responseText && xhr.responseText.trim() ? xhr.responseText : ('上传失败：' + xhr.statusText);
+                            var resp = xhr.responseText && xhr.responseText.trim() ? xhr.responseText : (I18N.UploadFailed + xhr.statusText);
                             try {
                                 if (resp.indexOf('<') === 0) {
                                     document.open();
@@ -368,7 +370,7 @@
                     };
 
                     xhr.onerror = function () {
-                        alert('上传出错');
+                        alert(I18N.UploadError);
                         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = I18N.UploadButton; submitBtn.removeAttribute('aria-busy'); }
                         // 恢复移除按钮
                         removeBtns.forEach(function (b) { try { b.disabled = false; } catch (e) { } });

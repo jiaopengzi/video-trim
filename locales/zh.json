@@ -22,8 +22,10 @@
   "RequestParseError": "请求体太大或无法解析表单",
   "ReturnUpload": "返回上传页面",
   "SelectAtLeastOne": "请选择至少一个视频文件后再上传",
-  "TailLabel": "掐尾 N 秒(可修改, 默认 0)",
+  "TailLabel": "去尾 N 秒(可修改, 默认 0)",
   "Title": "视频裁剪工具",
   "UploadButton": "上传并处理",
+  "UploadError": "上传错误",
+  "UploadFailed": "上传失败：",
   "UploadingText": "正在上传并处理..."
 }

@@ -36,4 +36,6 @@ var langEN = map[string]string{
 	KeyCannotReadFile:        "Unable to read file %s",
 	KeyFileEmptyOrUnreadable: "File %s is empty or unreadable",
 	KeyNotSupportedVideo:     "File %s is not a supported video format (magic number check failed)",
+	KeyUploadError:           "Upload error",
+	KeyUploadFailed:          "Upload failed: ",
 }
