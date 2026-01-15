@@ -24,8 +24,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	// 设置响应头
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	// 解析并执行模板
-	tmpl, err := template.ParseFiles("template.html")
+	// 解析模板文件, 并注册自定义函数
+	tmpl, err := template.New("template.html").Funcs(TemplateFuncMap).ParseFiles("template.html")
 	if err != nil {
 		log.Printf("parse template error: %v", err)
 		http.Error(w, "parse template error", http.StatusInternalServerError)

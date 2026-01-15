@@ -9,7 +9,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"mime/multipart"
@@ -22,6 +24,14 @@ import (
 	"strings"
 	"time"
 )
+
+// TemplateFuncMap 全局模板函数映射
+var TemplateFuncMap = template.FuncMap{
+	"safeJS": func(s string) template.JS {
+		// #nosec G203 -- 输入来自 json.Marshal, 已安全序列化
+		return template.JS(s)
+	},
+}
 
 // 初始化目录
 func initDir() {
@@ -169,9 +179,7 @@ func checkFilesMagicOrRespond(w http.ResponseWriter, files []*multipart.FileHead
 		f, err := hdr.Open()
 		if err != nil {
 			log.Printf("open uploaded file error: %v", err)
-
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			fmt.Fprintf(w, `<script>alert(%s);location.href='/';</script>`, strconv.Quote(fmt.Sprintf(i18n[KeyCannotReadFile], hdr.Filename)))
+			respondAlertAndRedirect(w, fmt.Sprintf(i18n[KeyCannotReadFile], hdr.Filename))
 
 			return false
 		}
@@ -182,23 +190,19 @@ func checkFilesMagicOrRespond(w http.ResponseWriter, files []*multipart.FileHead
 
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			log.Printf("read uploaded file error: %v", err)
-
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			fmt.Fprintf(w, `<script>alert(%s);location.href='/';</script>`, strconv.Quote(fmt.Sprintf(i18n[KeyCannotReadFile], hdr.Filename)))
+			respondAlertAndRedirect(w, fmt.Sprintf(i18n[KeyCannotReadFile], hdr.Filename))
 
 			return false
 		}
 
 		if n == 0 {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			fmt.Fprintf(w, `<script>alert(%s);location.href='/';</script>`, strconv.Quote(fmt.Sprintf(i18n[KeyFileEmptyOrUnreadable], hdr.Filename)))
+			respondAlertAndRedirect(w, fmt.Sprintf(i18n[KeyFileEmptyOrUnreadable], hdr.Filename))
 
 			return false
 		}
 
 		if !isVideoMagic(buf[:n]) {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			fmt.Fprintf(w, `<script>alert(%s);location.href='/';</script>`, strconv.Quote(fmt.Sprintf(i18n[KeyNotSupportedVideo], hdr.Filename)))
+			respondAlertAndRedirect(w, fmt.Sprintf(i18n[KeyNotSupportedVideo], hdr.Filename))
 
 			return false
 		}
@@ -457,6 +461,12 @@ func getMediaDuration(ffprobePath, input string) (float64, error) {
 	return f, nil
 }
 
+// respondAlertAndRedirect 响应一个 alert 弹窗并重定向到首页
+func respondAlertAndRedirect(w http.ResponseWriter, msg string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprintf(w, `<script>alert(%s);location.href='/';</script>`, strconv.Quote(msg))
+}
+
 // humanReadableBytes 将字节数格式化为人类可读的字符串(例如 8.0 MB)
 func humanReadableBytes(n int64) string {
 	const unit = 1024
@@ -483,53 +493,74 @@ func humanReadableBytes(n int64) string {
 	return fmt.Sprintf("%.1f %s", value, u)
 }
 
+// FileItem 用于模板渲染的文件信息
+type FileItem struct {
+	Name string
+	Link string
+}
+
 // generateResponse 输出处理完成后的下载页面
 func generateResponse(w http.ResponseWriter, processed []string, r *http.Request) {
 	// 生成处理完成后的 HTML 页面, 列出可下载文件
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	jsItems := []string{}
-	for _, fn := range processed {
-		jsItems = append(jsItems, strconv.Quote(fn))
-	}
-
-	jsArray := "[" + strings.Join(jsItems, ",") + "]"
-
 	// 选择语言并加载翻译
 	lang := detectLangFromRequest(r)
 	i18n := getLocale(lang)
 
-	title := i18n[KeyProcessedTitle]
-	downloadAll := i18n[KeyDownloadAll]
-	downloadText := i18n[KeyDownload]
-	returnUpload := i18n[KeyReturnUpload]
-
-	// 输出 HTML 内容
-	fmt.Fprintf(w, "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>%s</title><style>body{font-family:system-ui,Arial;background:#f7f8fa;margin:0;padding:12px} .wrap{max-width:720px;margin:0 auto} h2{margin:0 0 12px;font-size:18px} .downloadAllBtn{display:block;width:100%%;padding:12px;border-radius:12px;background:#10b981;color:#fff;border:0;font-size:16px;margin-bottom:12px} .list{display:flex;flex-direction:column;gap:10px} .item{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.06)} .name{flex:1;font-size:14px;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px} .actions{display:flex;gap:8px} .btn{background:#0366d6;color:#fff;padding:8px 12px;border-radius:10px;text-decoration:none;font-size:14px} .muted{color:#6b7280;font-size:13px;margin-top:8px} .returnBtn{display:inline-block;margin-top:10px;padding:10px 14px;border-radius:10px;background:#0366d6;color:#fff;text-decoration:none;font-weight:600}</style></head><body>", title)
-	fmt.Fprintln(w, "<div class=\"wrap\">")
-	fmt.Fprintf(w, "<h2>%s</h2>", title)
-	fmt.Fprintf(w, "<button id=\"downloadAll\" class=\"downloadAllBtn\">%s</button>", downloadAll)
-	fmt.Fprintln(w, "<div class=\"list\">")
-
-	// 列出所有处理成功的文件
-	for _, fn := range processed {
-		link := fmt.Sprintf("/download/%s", fn)
-		fmt.Fprintf(w, "<div class=\"item\"><div class=\"name\">%s</div><div class=\"actions\"><a class=\"btn\" href=\"%s\" download>%s</a></div></div>", fn, link, downloadText)
+	// 构建文件列表
+	files := make([]FileItem, len(processed))
+	for idx, fn := range processed {
+		files[idx] = FileItem{
+			Name: fn,
+			Link: fmt.Sprintf("/download/%s", fn),
+		}
 	}
 
-	fmt.Fprintln(w, "</div>")
+	// 使用 json.Marshal 安全序列化文件名列表
+	filesJSONBytes, err := json.Marshal(processed)
+	if err != nil {
+		log.Printf("json marshal error: %v", err)
+		http.Error(w, "json marshal error", http.StatusInternalServerError)
 
-	// 若无文件被处理成功, 提示用户
-	if len(processed) == 0 {
-		muted := i18n[KeyNoProcessedFilesHint]
-		fmt.Fprintf(w, "<p class=\"muted\">%s</p>", muted)
+		return
 	}
 
-	// 返回上传页面链接
-	fmt.Fprintf(w, "<p><a class=\"returnBtn\" href=\"/\">%s</a></p>", returnUpload)
+	// 模板数据
+	data := struct {
+		Lang         string
+		Title        string
+		DownloadAll  string
+		DownloadText string
+		ReturnUpload string
+		NoFilesHint  string
+		Files        []FileItem
+		FilesJSON    string
+	}{
+		Lang:         lang,
+		Title:        i18n[KeyProcessedTitle],
+		DownloadAll:  i18n[KeyDownloadAll],
+		DownloadText: i18n[KeyDownload],
+		ReturnUpload: i18n[KeyReturnUpload],
+		NoFilesHint:  i18n[KeyNoProcessedFilesHint],
+		Files:        files,
+		FilesJSON:    string(filesJSONBytes),
+	}
 
-	// 页面端提供「下载全部」功能: 逐个请求 /download/ 并触发保存
-	fmt.Fprintf(w, `<script>var files=%s;(function(){document.getElementById('downloadAll').addEventListener('click',async function(){if(!files||!files.length)return;this.disabled=true;for(let i=0;i<files.length;i++){let f=files[i];try{let resp=await fetch('/download/'+encodeURIComponent(f));if(!resp.ok){console.error('fetch failed',f);continue}let blob=await resp.blob();let url=URL.createObjectURL(blob);let a=document.createElement('a');a.href=url;a.download=f;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}catch(e){console.error(e)}await new Promise(r=>setTimeout(r,500));}this.disabled=false});})();</script>`, jsArray)
-	fmt.Fprintln(w, "</div>")
-	fmt.Fprintln(w, "</body></html>")
+	// 解析并执行模板
+	tmpl, err := template.New("template.html").Funcs(TemplateFuncMap).ParseFiles("template.html")
+	if err != nil {
+		log.Printf("parse template error: %v", err)
+		http.Error(w, "parse template error", http.StatusInternalServerError)
+
+		return
+	}
+
+	// 执行 result 模板
+	if err := tmpl.ExecuteTemplate(w, "result", data); err != nil {
+		log.Printf("template execute error: %v", err)
+		http.Error(w, "template execute error", http.StatusInternalServerError)
+
+		return
+	}
 }
